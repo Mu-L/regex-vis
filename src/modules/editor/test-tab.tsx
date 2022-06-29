@@ -1,8 +1,10 @@
 import React, { useMemo } from "react"
-import { Button, Spacer } from "@geist-ui/core"
+import { useSearchParams } from "react-router-dom"
+import { useEffectOnce } from "react-use"
+import { Button, Spacer, useToasts, useClipboard } from "@geist-ui/core"
 import Plus from "@geist-ui/icons/plus"
-// import Copy from "@geist-ui/icons/copy"
-// import { useTranslation } from "react-i18next"
+import Copy from "@geist-ui/icons/copy"
+import { useTranslation } from "react-i18next"
 import { useAtomValue } from "jotai"
 import { useLocalStorage } from "react-use"
 import produce from "immer"
@@ -11,7 +13,8 @@ import { gen } from "@/parser"
 import { astAtom } from "@/atom"
 
 const TestTab = () => {
-  // const { t } = useTranslation()
+  const { t } = useTranslation()
+  const [searchParams] = useSearchParams()
   const [cases, setCases] = useLocalStorage<string[]>("test-case", [""])
   const ast = useAtomValue(astAtom)
   const regExp = useMemo(() => {
@@ -19,12 +22,27 @@ const TestTab = () => {
     return new RegExp(regex, ast.flags.join(""))
   }, [ast])
 
-  // const { setToast } = useToasts()
-  // const { copy } = useClipboard()
-  // const handleCopyPermalink = () => {
-  //   copy("hello, geist-ui")
-  //   setToast({ text: t("Permalink copied.") })
-  // }
+  const { setToast } = useToasts()
+  const { copy } = useClipboard()
+
+  useEffectOnce(() => {
+    const tParam = searchParams.get("t")
+    if (tParam) {
+      try {
+        const tests = JSON.parse(tParam)
+        setCases(tests)
+      } catch (error) {
+        console.error(error)
+      }
+    }
+  })
+
+  const handleCopyPermalink = () => {
+    const url = new URL(window.location.href)
+    url.searchParams.set("t", JSON.stringify(cases))
+    copy(url.toString())
+    setToast({ text: t("Permalink copied.") })
+  }
 
   const handleChange = (value: string, index: number) => {
     setCases(
@@ -72,14 +90,14 @@ const TestTab = () => {
             px={0.6}
             onClick={handleAdd}
           />
-          {/* <Spacer w={1} />
+          <Spacer w={1} />
           <Button
             iconRight={<Copy />}
             auto
             scale={2 / 3}
             px={0.6}
             onClick={handleCopyPermalink}
-          /> */}
+          />
         </div>
       </div>
       <style jsx>{`

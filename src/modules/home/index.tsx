@@ -65,18 +65,18 @@ const Home: React.FC<{}> = () => {
   }, [regex, isLiteral, setAst, clearSelected])
 
   useEffect(() => {
-    // update url search
-    const nextParams: { r?: string; l?: string } = {}
-    if (regex !== "") {
-      nextParams.r = regex
+    const searchParams = new URLSearchParams(window.location.search)
+    if (regex === "") {
+      searchParams.delete("r")
     }
     if (isLiteral) {
-      nextParams.l = "1"
+      searchParams.set("l", "1")
       localStorage.setItem("isLiteral", "1")
     } else {
+      searchParams.delete("l")
       localStorage.removeItem("isLiteral")
     }
-    setSearchParams(nextParams)
+    setSearchParams(searchParams)
   }, [regex, setSearchParams, isLiteral])
 
   useUpdateEffect(() => {
